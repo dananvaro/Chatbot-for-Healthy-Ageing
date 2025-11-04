@@ -10,3 +10,39 @@ The purpose of this project is to develop a conversational AI/chatbot for older 
 - Live responses
 - Powered by OpenAI’s Language Model
 - Designed for Older Adults
+
+## Setup and Installation
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+
+### Getting Started
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/Chatbot-for-Healthy-Ageing.git
+   cd Chatbot-for-Healthy-Ageing
+   ```
+
+2. **Install frontend dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to `http://localhost:5173` (or the port shown in your terminal)
+
+## Tech Stack
+
+### Frontend
+- **React** - UI framework
+- **Vite** - Build tool and dev server
+- **Chakra UI v3** - Component library for styling and UI components
+- **Emotion** - CSS-in-JS styling (required by Chakra UI)
