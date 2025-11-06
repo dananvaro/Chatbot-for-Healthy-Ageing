@@ -1,35 +1,33 @@
-import { useState } from 'react'
-import { Box } from '@chakra-ui/react'
-import OnboardingCard from './components/OnboardingCard'
-import ChatScreen from './components/ChatScreen'
-import './App.css'
+import { useState } from 'react';
+import { Box } from '@chakra-ui/react';
+import OnboardingCard from './components/OnboardingCard';
+import ChatScreen from './components/ChatScreen';
 
-export default function App() {
+function App() {
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [userPreferences, setUserPreferences] = useState(null);
+  const [onboardingData, setOnboardingData] = useState(null);
 
-  const handleOnboardingComplete = (preferences) => {
-    setUserPreferences(preferences);
+  const handleOnboardingComplete = (data) => {
+    setOnboardingData(data);
     setShowOnboarding(false);
-    console.log('User preferences:', preferences);
   };
 
   return (
-    <>
+    <Box 
+      minH="100vh" 
+      bg="gray.300" 
+      display="flex" 
+      alignItems="center" 
+      justifyContent="center"
+      p={4}
+    >
       {showOnboarding ? (
-        <Box 
-          minH="100vh" 
-          bg="gray.200" 
-          display="flex" 
-          alignItems="center" 
-          justifyContent="center"
-          p={4}
-        >
-          <OnboardingCard onComplete={handleOnboardingComplete} />
-        </Box>
+        <OnboardingCard onComplete={handleOnboardingComplete} />
       ) : (
-        <ChatScreen userPreferences={userPreferences} />
+        <ChatScreen onboardingData={onboardingData} />
       )}
-    </>
+    </Box>
   );
 }
+
+export default App;

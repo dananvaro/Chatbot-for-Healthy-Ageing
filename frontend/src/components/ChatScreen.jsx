@@ -14,7 +14,7 @@ import AccessibilitySidebar from './AccessibilitySidebar';
 import sendIcon from '../assets/send-icon.png';
 import appleIcon from '../assets/apple-icon.png';
 
-const ChatScreen = ({ userPreferences }) => {
+const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -46,9 +46,17 @@ const ChatScreen = ({ userPreferences }) => {
   const [inputValue, setInputValue] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
-  const [textSize, setTextSize] = useState(3); // 1-5 scale, 3 is normal
-  const [isDarkMode, setIsDarkMode] = useState(false); // Light mode by default
+  const [textSize, setTextSize] = useState(3);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Add settings state
+  const [botSettings, setBotSettings] = useState({
+    simplerLanguage: false,
+    shortAnswers: false,
+    showSources: false,
+    language: 'no'
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,6 +65,59 @@ const ChatScreen = ({ userPreferences }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Function to build system prompt based on settings and onboarding data
+  const buildSystemPrompt = () => {
+    let prompt = "Du er NutriBot, en hjelpsom ernæringsassistent for eldre.";
+    
+    // Add onboarding data if available
+    if (onboardingData) {
+      // Allergies (step 2)
+      if (onboardingData[2] && onboardingData[2].length > 0) {
+        prompt += `\n\nBrukeren har følgende allergier eller kostpreferanser: ${onboardingData[2].join(', ')}.`;
+        prompt += " Ta hensyn til dette i alle anbefalinger.";
+      }
+      
+      // Health conditions (step 3)
+      if (onboardingData[3] && onboardingData[3].length > 0) {
+        prompt += `\n\nBrukeren har følgende helseutfordringer: ${onboardingData[3].join(', ')}.`;
+        prompt += " Tilpass kostholdsrådene til disse tilstandene.";
+      }
+    }
+    
+    // Add settings-based modifications
+    if (botSettings.simplerLanguage) {
+      prompt += "\n\nBruk enkelt språk og korte setninger. Unngå fagtermer.";
+    }
+    
+    if (botSettings.shortAnswers) {
+      prompt += "\n\nHold svarene korte og konsise, maksimum 3-4 setninger.";
+    }
+    
+    if (botSettings.showSources) {
+      prompt += "\n\nInkluder alltid kilder til informasjonen.";
+    }
+    
+    // Language specific instructions
+    const languageInstructions = {
+      no: "\n\nSvar på norsk.",
+      en: "\n\nAnswer in English.",
+      sv: "\n\nSvara på svenska.",
+      da: "\n\nSvar på dansk."
+    };
+    
+    prompt += languageInstructions[botSettings.language];
+    
+    return prompt;
+  };
+
+  // Log system prompt whenever settings or onboarding data change
+  useEffect(() => {
+    const systemPrompt = buildSystemPrompt();
+    console.log('System Prompt:', systemPrompt);
+    console.log('Current Settings:', botSettings);
+    console.log('Onboarding Data:', onboardingData);
+  }, [botSettings, onboardingData]);
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
@@ -205,6 +266,8 @@ const ChatScreen = ({ userPreferences }) => {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)}
         onToggle={() => setShowSettings(!showSettings)}
+        settings={botSettings}
+        onSettingsChange={setBotSettings}
       />
       
       <AccessibilitySidebar 

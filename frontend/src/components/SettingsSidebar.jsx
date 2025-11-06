@@ -6,44 +6,29 @@ import {
   Heading,
   Image as ChakraImage
 } from '@chakra-ui/react';
-import { useState } from 'react';
-import { ChevronDown, MessageCircleMore, Info, BookOpenCheck, RotateCcw, Languages } from 'lucide-react';
+import { MessageCircleMore, FileText, BookOpen, Languages, RotateCcw, ChevronDown } from 'lucide-react';
 import settingsIcon from '../assets/settings-icon.png';
 
-const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
-  const [settings, setSettings] = useState({
-    simplerLanguage: false,
-    shortAnswers: false,
-    showImages: false,
-    language: 'no'
-  });
-
+const SettingsSidebar = ({ isOpen, onClose, onToggle, settings, onSettingsChange }) => {
   const toggleSetting = (key) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    onSettingsChange({
+      ...settings,
+      [key]: !settings[key]
+    });
   };
 
-  const languages = [
-    { value: 'no', label: 'Norsk' },
-    { value: 'en', label: 'English' },
-    { value: 'sv', label: 'Svenska' },
-    { value: 'da', label: 'Dansk' }
-  ];
-
   const handleLanguageChange = (e) => {
-    setSettings(prev => ({
-      ...prev,
+    onSettingsChange({
+      ...settings,
       language: e.target.value
-    }));
+    });
   };
 
   const resetSettings = () => {
-    setSettings({
+    onSettingsChange({
       simplerLanguage: false,
       shortAnswers: false,
-      showImages: false,
+      showSources: false,
       language: 'no'
     });
   };
@@ -73,6 +58,16 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
       />
     </Box>
   );
+
+  const getLanguageLabel = () => {
+    const labels = {
+      no: 'Norsk',
+      en: 'English',
+      sv: 'Svenska',
+      da: 'Dansk'
+    };
+    return labels[settings.language];
+  };
 
   return (
     <>
@@ -108,7 +103,6 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             w="100%"
             h="100%"
             objectFit="contain"
-            filter="brightness(0) invert(1)"
           />
         </Box>
       </Box>
@@ -119,7 +113,7 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
           position="fixed"
           left={0}
           top={12}
-          bottom={450}
+          bottom={350}
           w="280px"
           bg="white"
           boxShadow="2xl"
@@ -153,7 +147,7 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             {/* Short Answers Toggle */}
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
-                <Info size={20} color="black" />
+                <FileText size={20} color="black" />
                 <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Korte svar
                 </Text>
@@ -164,26 +158,26 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
               />
             </HStack>
 
-            {/* Show Images Toggle */}
+            {/* Show Sources Toggle */}
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
-                <BookOpenCheck size={20} color="black" />
+                <BookOpen size={20} color="black" />
                 <Text fontSize="md" fontWeight="medium" color="gray.800">
-                  Vis kilder til svar
+                  Vis kilder
                 </Text>
               </HStack>
               <ToggleSwitch
-                isActive={settings.showImages}
-                onClick={() => toggleSetting('showImages')}
+                isActive={settings.showSources}
+                onClick={() => toggleSetting('showSources')}
               />
             </HStack>
 
-            {/* Language Selection Dropdown */}
+            {/* Language Selection */}
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Languages size={20} color="black" />
                 <Text fontSize="md" fontWeight="medium" color="gray.800">
-                  Velg språk
+                  Språk
                 </Text>
               </HStack>
               <Box position="relative">
@@ -191,45 +185,33 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
                   as="select"
                   value={settings.language}
                   onChange={handleLanguageChange}
-                  w="44px"
-                  h="24px"
+                  w="90px"
+                  h="28px"
                   bg="gray.800"
-                  border="none"
+                  color="white"
+                  backgroundColor={"#1C5E47"}
                   borderRadius="full"
-                  fontSize="xs"
-                  fontWeight="medium"
-                  color="transparent"
+                  border="none"
+                  px={4}
+                  pr={8}
                   cursor="pointer"
                   appearance="none"
-                  textAlign="center"
-                  pl={2}
-                  pr={1}
-                  _hover={{ bg: 'gray.700' }}
-                  _focus={{ outline: 'none', bg: 'gray.700' }}
-                  sx={{
-                    'option': {
-                      color: 'black',
-                      backgroundColor: 'white'
-                    }
-                  }}
+                  fontSize="md"
+                  _focus={{ outline: 'none' }}
                 >
-                  {languages.map((lang) => (
-                    <option key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </option>
-                  ))}
+                  <option value="no">Norsk</option>
+                  <option value="en">English</option>
+                  <option value="sv">Svenska</option>
+                  <option value="da">Dansk</option>
                 </Box>
                 <Box
                   position="absolute"
-                  right="12px"
+                  right={2}
                   top="50%"
                   transform="translateY(-50%)"
                   pointerEvents="none"
-                  color="white"
-                  display="flex"
-                  alignItems="center"
                 >
-                  <ChevronDown size={22} />
+                  <ChevronDown size={20} color="white" />
                 </Box>
               </Box>
             </HStack>
