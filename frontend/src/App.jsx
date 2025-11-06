@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Box } from '@chakra-ui/react'
 import OnboardingCard from './components/OnboardingCard'
+import ChatScreen from './components/ChatScreen'
 import './App.css'
 
 export default function App() {
@@ -14,34 +15,21 @@ export default function App() {
   };
 
   return (
-    <Box 
-      minH="100vh" 
-      bg="gray.200" 
-      display="flex" 
-      alignItems="center" 
-      justifyContent="center"
-      p={4}
-    >
+    <>
       {showOnboarding ? (
-        <OnboardingCard onComplete={handleOnboardingComplete} />
-      ) : (
         <Box 
-          maxW="960px" 
-          margin="40px auto"
-          bg="white"
-          p={8}
-          borderRadius="xl"
-          boxShadow="md"
+          minH="100vh" 
+          bg="gray.200" 
+          display="flex" 
+          alignItems="center" 
+          justifyContent="center"
+          p={4}
         >
-          <h1>NutriBot.</h1>
-          <p>Onboarding complete! Ready to add chat components.</p>
-          {userPreferences && (
-            <pre style={{ marginTop: '20px', padding: '10px', background: '#f5f5f5', borderRadius: '8px' }}>
-              {JSON.stringify(userPreferences, null, 2)}
-            </pre>
-          )}
+          <OnboardingCard onComplete={handleOnboardingComplete} />
         </Box>
+      ) : (
+        <ChatScreen userPreferences={userPreferences} />
       )}
-    </Box>
+    </>
   );
 }
