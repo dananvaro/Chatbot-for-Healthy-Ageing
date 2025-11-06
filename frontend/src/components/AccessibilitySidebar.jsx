@@ -7,16 +7,14 @@ import {
   Image as ChakraImage
 } from '@chakra-ui/react';
 import { useState } from 'react';
-import { AArrowUp, Barcode, Contrast, Eye, Lightbulb, RotateCcw } from 'lucide-react';
+import { Plus, Minus, Barcode, Contrast, Eye, Lightbulb, RotateCcw } from 'lucide-react';
 import accessibilityIcon from '../assets/accessibility-icon.png';
 
-const AccessibilitySidebar = ({ isOpen, onClose, onToggle }) => {
+const AccessibilitySidebar = ({ isOpen, onClose, onToggle, textSize, onTextSizeChange, isDarkMode, onDarkModeChange }) => {
   const [settings, setSettings] = useState({
-    textSize: 'normal',
     showGrayscale: false,
     highContrast: false,
-    negativeContrast: false,
-    lightBackground: false
+    negativeContrast: false
   });
 
   const toggleSetting = (key) => {
@@ -26,21 +24,26 @@ const AccessibilitySidebar = ({ isOpen, onClose, onToggle }) => {
     }));
   };
 
-  const setTextSize = (size) => {
-    setSettings(prev => ({
-      ...prev,
-      textSize: size
-    }));
+  const increaseTextSize = () => {
+    if (textSize < 5) {
+      onTextSizeChange(textSize + 1);
+    }
+  };
+
+  const decreaseTextSize = () => {
+    if (textSize > 1) {
+      onTextSizeChange(textSize - 1);
+    }
   };
 
   const resetSettings = () => {
     setSettings({
-      textSize: 'normal',
       showGrayscale: false,
       highContrast: false,
-      negativeContrast: false,
-      lightBackground: false
+      negativeContrast: false
     });
+    onTextSizeChange(3); // Reset to normal size
+    onDarkModeChange(false); // Reset to light mode
   };
 
   const ToggleSwitch = ({ isActive, onClick }) => (
@@ -131,64 +134,58 @@ const AccessibilitySidebar = ({ isOpen, onClose, onToggle }) => {
 
           <VStack spacing={0} align="stretch" px={6} py={4}>
             {/* Text Size */}
-            <Box py={3}>
-              <HStack spacing={3} mb={3}>
-                <AArrowUp size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+            <HStack justify="space-between" py={3}>
+              <HStack spacing={3}>
+                <Text fontSize="lg">A</Text>
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Tekststørrelse
                 </Text>
               </HStack>
               <HStack spacing={2}>
                 <Box
                   as="button"
-                  flex="1"
-                  py={2}
-                  bg={settings.textSize === 'small' ? 'blue.300' : 'gray.100'}
-                  borderRadius="md"
+                  w="32px"
+                  h="32px"
+                  bg="gray.500"
+                  opacity={textSize <= 1 ? 0.3 : 0.7}
+                  borderRadius="full"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
                   cursor="pointer"
-                  onClick={() => setTextSize('small')}
-                  border="2px solid"
-                  borderColor={settings.textSize === 'small' ? 'blue.800' : 'transparent'}
-                  _hover={{ bg: settings.textSize === 'small' ? 'blue.400' : 'gray.200' }}
+                  onClick={decreaseTextSize}
+                  disabled={textSize <= 1}
+                  _hover={{ opacity: textSize > 1 ? 1 : 0.3 }}
+                  transition="all 0.2s"
                 >
-                  <Text fontSize="xs" fontWeight="medium" color="gray.800">A-</Text>
+                  <Minus size={24} color="white" />
                 </Box>
                 <Box
                   as="button"
-                  flex="1"
-                  py={2}
-                  bg={settings.textSize === 'normal' ? 'blue.300' : 'gray.100'}
-                  borderRadius="md"
+                  w="32px"
+                  h="32px"
+                  bg="#3B4CA0"
+                  opacity={textSize >= 5 ? 0.7 : 1}
+                  borderRadius="full"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
                   cursor="pointer"
-                  onClick={() => setTextSize('normal')}
-                  border="2px solid"
-                  borderColor={settings.textSize === 'normal' ? 'blue.800' : 'transparent'}
-                  _hover={{ bg: settings.textSize === 'normal' ? 'blue.400' : 'gray.200' }}
+                  onClick={increaseTextSize}
+                  disabled={textSize >= 5}
+                  _hover={{ opacity: textSize < 5 ? 1 : 0.3 }}
+                  transition="all 0.2s"
                 >
-                  <Text fontSize="sm" fontWeight="medium" color="gray.800">A</Text>
-                </Box>
-                <Box
-                  as="button"
-                  flex="1"
-                  py={2}
-                  bg={settings.textSize === 'large' ? 'blue.300' : 'gray.100'}
-                  borderRadius="md"
-                  cursor="pointer"
-                  onClick={() => setTextSize('large')}
-                  border="2px solid"
-                  borderColor={settings.textSize === 'large' ? 'blue.800' : 'transparent'}
-                  _hover={{ bg: settings.textSize === 'large' ? 'blue.400' : 'gray.200' }}
-                >
-                  <Text fontSize="md" fontWeight="medium" color="gray.800">A+</Text>
+                  <Plus size={24} color="white" />
                 </Box>
               </HStack>
-            </Box>
+            </HStack>
 
             {/* Grayscale Toggle */}
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Barcode size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Gråtoner
                 </Text>
               </HStack>
@@ -202,7 +199,7 @@ const AccessibilitySidebar = ({ isOpen, onClose, onToggle }) => {
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Contrast size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Høy kontrast
                 </Text>
               </HStack>
@@ -216,7 +213,7 @@ const AccessibilitySidebar = ({ isOpen, onClose, onToggle }) => {
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Eye size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Negativ kontrast
                 </Text>
               </HStack>
@@ -226,24 +223,24 @@ const AccessibilitySidebar = ({ isOpen, onClose, onToggle }) => {
               />
             </HStack>
 
-            {/* Light Background Toggle */}
+            {/* Light Background Toggle - ON by default, OFF = dark mode */}
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Lightbulb size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Lys bakgrunn
                 </Text>
               </HStack>
               <ToggleSwitch
-                isActive={settings.lightBackground}
-                onClick={() => toggleSetting('lightBackground')}
+                isActive={!isDarkMode}
+                onClick={() => onDarkModeChange(!isDarkMode)}
               />
             </HStack>
 
             {/* Reset Settings */}
             <HStack spacing={3} py={3} cursor="pointer" onClick={resetSettings}>
               <RotateCcw size={20} color="black" />
-              <Text fontSize="sm" fontWeight="medium" color="gray.800">
+              <Text fontSize="md" fontWeight="medium" color="gray.800">
                 Nullstill innstillinger
               </Text>
             </HStack>

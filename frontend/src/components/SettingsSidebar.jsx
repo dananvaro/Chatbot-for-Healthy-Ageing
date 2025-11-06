@@ -140,7 +140,7 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <MessageCircleMore size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Bruk enklere språk
                 </Text>
               </HStack>
@@ -154,7 +154,7 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Info size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Korte svar
                 </Text>
               </HStack>
@@ -168,8 +168,8 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <BookOpenCheck size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
-                  Vis bilder til svar
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
+                  Vis kilder til svar
                 </Text>
               </HStack>
               <ToggleSwitch
@@ -182,7 +182,7 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             <HStack justify="space-between" py={3}>
               <HStack spacing={3}>
                 <Languages size={20} color="black" />
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                <Text fontSize="md" fontWeight="medium" color="gray.800">
                   Velg språk
                 </Text>
               </HStack>
@@ -237,7 +237,7 @@ const SettingsSidebar = ({ isOpen, onClose, onToggle }) => {
             {/* Reset Settings */}
             <HStack spacing={3} py={3} cursor="pointer" onClick={resetSettings}>
               <RotateCcw size={20} color="black" />
-              <Text fontSize="sm" fontWeight="medium" color="gray.800">
+              <Text fontSize="md" fontWeight="medium" color="gray.800">
                 Nullstill innstillinger
               </Text>
             </HStack>

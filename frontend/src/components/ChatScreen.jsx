@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Box, 
   Input,
@@ -46,6 +46,17 @@ const ChatScreen = ({ userPreferences }) => {
   const [inputValue, setInputValue] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [textSize, setTextSize] = useState(3); // 1-5 scale, 3 is normal
+  const [isDarkMode, setIsDarkMode] = useState(false); // Light mode by default
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
@@ -65,13 +76,19 @@ const ChatScreen = ({ userPreferences }) => {
     }
   };
 
+  // Map text size to font sizes
+  const getFontSize = () => {
+    const sizes = ['xs', 'sm', 'md', 'lg', 'xl'];
+    return sizes[textSize - 1];
+  };
+
   return (
-    <Box minH="100vh" bg="gray.300" p={4} position="relative">
+    <Box minH="100vh" bg={isDarkMode ? 'gray.900' : 'gray.300'} p={4} position="relative">
       <Box
         maxW="900px"
         w="full"
         h="90vh"
-        bg="white"
+        bg={isDarkMode ? 'gray.800' : 'white'}
         borderRadius="xl"
         margin="0 auto"
         display="flex"
@@ -116,8 +133,8 @@ const ChatScreen = ({ userPreferences }) => {
                 </Box>
               )}
               <Box
-                bg={message.type === 'user' ? 'green.800' : 'gray.200'}
-                color={message.type === 'user' ? 'white' : 'black'}
+                bg={message.type === 'user' ? 'green.800' : (isDarkMode ? 'gray.700' : 'gray.200')}
+                color={message.type === 'user' ? 'white' : (isDarkMode ? 'white' : 'black')}
                 p={4}
                 borderTopLeftRadius={message.type === 'user' ? '4xl' : 'sm'}
                 borderTopRightRadius={message.type === 'user' ? 'sm' : '4xl'}
@@ -126,20 +143,21 @@ const ChatScreen = ({ userPreferences }) => {
                 whiteSpace="pre-wrap"
                 wordBreak="break-word"
               >
-                <Text whiteSpace="pre-line">{message.text}</Text>
+                <Text fontSize={getFontSize()} whiteSpace="pre-line">{message.text}</Text>
               </Box>
             </HStack>
           ))}
+          <div ref={messagesEndRef} />
         </VStack>
 
         {/* Input Area */}
-        <HStack p={6} borderTop="1px solid" borderColor="gray.200" spacing={3}>
+        <HStack p={6} borderTop="1px solid" borderColor={isDarkMode ? 'gray.700' : 'gray.200'} spacing={3}>
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Spør om hva som helst"
-            bg="gray.800"
+            bg={isDarkMode ? 'gray.700' : 'gray.800'}
             color="white"
             size="lg"
             borderRadius="xl"
@@ -193,6 +211,10 @@ const ChatScreen = ({ userPreferences }) => {
         isOpen={showAccessibility} 
         onClose={() => setShowAccessibility(false)}
         onToggle={() => setShowAccessibility(!showAccessibility)}
+        textSize={textSize}
+        onTextSizeChange={setTextSize}
+        isDarkMode={isDarkMode}
+        onDarkModeChange={setIsDarkMode}
       />
     </Box>
   );
