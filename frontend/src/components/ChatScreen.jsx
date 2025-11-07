@@ -6,13 +6,15 @@ import {
   HStack,
   Text,
   IconButton,
-  Image as ChakraImage
+  Image as ChakraImage,
+  Spinner
 } from '@chakra-ui/react';
 import Logo from './Logo';
 import SettingsSidebar from './SettingsSidebar';
 import AccessibilitySidebar from './AccessibilitySidebar';
 import sendIcon from '../assets/send-icon.png';
 import appleIcon from '../assets/apple-icon.png';
+import { sendChatMessage, checkBackendHealth } from '../services/chatService';
 
 const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [messages, setMessages] = useState([
@@ -20,26 +22,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
       id: 1,
       type: 'bot',
       text: 'Hei! Jeg er NutriBot 👋\nHvordan kan jeg hjelpe deg i dag?'
-    },
-    {
-      id: 2,
-      type: 'user',
-      text: 'Hva er de beste kildene til protein for eldre?'
-    },
-    {
-      id: 3,
-      type: 'bot',
-      text: 'Gode proteinkilder for eldre inkluderer:\n\n• Fisk (laks, makrell)\n• Egg\n• Kylling og kalkun\n• Bønner og linser\n• Gresk yoghurt\n• Cottage cheese\n• Nøtter og frø\n\nDet anbefales å få minst 1-1,2 gram protein per kilo kroppsvekt daglig for å opprettholde muskelmasse.'
-    },
-    {
-      id: 4,
-      type: 'user',
-      text: 'Hvor mye vann bør jeg drikke daglig?'
-    },
-    {
-      id: 5,
-      type: 'bot',
-      text: 'Som eldre er det viktig å drikke nok væske! Generelt anbefales:\n\n• 1,5-2 liter væske per dag\n• Mer hvis du er fysisk aktiv eller det er varmt\n• Vann, te og kaffe teller med\n• Frukt og grønnsaker gir også væske\n\nHusk at tørstefølelsen kan være redusert med alderen, så drikk jevnlig gjennom dagen selv om du ikke føler deg tørst.'
     }
   ]);
   
@@ -48,15 +30,30 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [textSize, setTextSize] = useState(3);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [backendAvailable, setBackendAvailable] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Add settings state
+  // Bot settings state
   const [botSettings, setBotSettings] = useState({
     simplerLanguage: false,
     shortAnswers: false,
     showSources: false,
     language: 'no'
   });
+
+  // Check backend health on mount
+  useEffect(() => {
+    const checkHealth = async () => {
+      const isHealthy = await checkBackendHealth();
+      setBackendAvailable(isHealthy);
+      if (!isHealthy) {
+        console.warn('Backend is not available. Using mock responses.');
+      }
+    };
+    checkHealth();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -66,11 +63,10 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Function to build system prompt based on settings and onboarding data
+  // Build system prompt based on settings and onboarding data
   const buildSystemPrompt = () => {
     let prompt = "Du er NutriBot, en hjelpsom ernæringsassistent for eldre.";
     
-    // Add onboarding data if available
     if (onboardingData) {
       // Allergies (step 2)
       if (onboardingData[2] && onboardingData[2].length > 0) {
@@ -85,7 +81,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
       }
     }
     
-    // Add settings-based modifications
     if (botSettings.simplerLanguage) {
       prompt += "\n\nBruk enkelt språk og korte setninger. Unngå fagtermer.";
     }
@@ -98,7 +93,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
       prompt += "\n\nInkluder alltid kilder til informasjonen.";
     }
     
-    // Language specific instructions
     const languageInstructions = {
       no: "\n\nSvar på norsk.",
       en: "\n\nAnswer in English.",
@@ -111,28 +105,108 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     return prompt;
   };
 
-  // Log system prompt whenever settings or onboarding data change
-  useEffect(() => {
+  // Convert messages to API format
+  const formatMessagesForAPI = () => {
     const systemPrompt = buildSystemPrompt();
-    console.log('System Prompt:', systemPrompt);
-    console.log('Current Settings:', botSettings);
-    console.log('Onboarding Data:', onboardingData);
-  }, [botSettings, onboardingData]);
+    
+    // Start with system message
+    const apiMessages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      }
+    ];
+    
+    // Add conversation history (skip the initial bot greeting)
+    messages.slice(1).forEach(msg => {
+      apiMessages.push({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      });
+    });
+    
+    return apiMessages;
+  };
 
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        type: 'user',
-        text: inputValue
+  // Mock response for when backend is not available
+  const getMockResponse = (userMessage) => {
+    const responses = {
+      default: 'Beklager, Nutribot er ikke tilgjengelig for øyeblikket. Dette er en automatisk-respons. Ditt spørsmål var: "' + userMessage + '"',
+      protein: 'Gode proteinkilder for eldre inkluderer:\n\n• Fisk (laks, makrell)\n• Egg\n• Kylling og kalkun\n• Bønner og linser\n• Gresk yoghurt\n• Cottage cheese\n• Nøtter og frø',
+      vann: 'Som eldre er det viktig å drikke nok væske! Generelt anbefales:\n\n• 1,5-2 liter væske per dag\n• Mer hvis du er fysisk aktiv eller det er varmt\n• Vann, te og kaffe teller med'
+    };
+
+    const lowerMessage = userMessage.toLowerCase();
+    if (lowerMessage.includes('protein')) return responses.protein;
+    if (lowerMessage.includes('vann') || lowerMessage.includes('drikke')) return responses.vann;
+    return responses.default;
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage = {
+      id: messages.length + 1,
+      type: 'user',
+      text: inputValue
+    };
+
+    // Add user message immediately
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      let botResponse;
+
+      if (backendAvailable) {
+        // Backend is available - make real API call
+        const apiMessages = [...formatMessagesForAPI(), {
+          role: 'user',
+          content: userMessage.text
+        }];
+
+        const response = await sendChatMessage(
+          apiMessages,
+          botSettings,
+          onboardingData
+        );
+
+        botResponse = response.message || response.content;
+      } else {
+        // Backend not available - use mock response
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+        botResponse = getMockResponse(userMessage.text);
+      }
+
+      // Add bot response
+      const botMessage = {
+        id: messages.length + 2,
+        type: 'bot',
+        text: botResponse
       };
-      setMessages([...messages, newMessage]);
-      setInputValue('');
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Kunne ikke sende meldingen. Vennligst prøv igjen.');
+      
+      // Add error message to chat
+      const errorMessage = {
+        id: messages.length + 2,
+        type: 'bot',
+        text: 'Beklager, det oppstod en feil. Vennligst prøv igjen senere.'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
@@ -144,21 +218,33 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   };
 
   return (
-    <Box minH="100vh" bg={isDarkMode ? 'gray.900' : 'gray.300'} p={4} position="relative">
+    <Box minH="100vh" bg={isDarkMode ? 'gray.900' : 'gray.300'} p={0} position="relative">
       <Box
-        maxW="900px"
-        w="full"
+        maxW="1600px"
+        w="60vw"
         h="90vh"
         bg={isDarkMode ? 'gray.800' : 'white'}
         borderRadius="xl"
-        margin="0 auto"
+        margin="5vh auto"
         display="flex"
         flexDirection="column"
       >
         {/* Header */}
         <HStack pl={16} pt={16} pb={8} justify="space-between">
           <Logo size="lg" />
+          {!backendAvailable && (
+            <Text fontSize="sm" color="orange.500" fontWeight="medium">
+              ⚠️ Backend ikke tilkoblet
+            </Text>
+          )}
         </HStack>
+
+        {/* Error Alert */}
+        {error && (
+          <Box mx={6} mb={4} p={3} bg="red.100" borderRadius="md">
+            <Text color="red.800" fontSize="sm">{error}</Text>
+          </Box>
+        )}
 
         {/* Messages Area */}
         <VStack pl={16} pr={6} spacing={4} align="stretch" flex="1" overflowY="auto">
@@ -168,7 +254,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
               alignSelf={message.type === 'user' ? 'flex-end' : 'flex-start'}
               align="flex-start"
               spacing={3}
-              maxW="70%"
+              maxW="100%"
             >
               {message.type === 'bot' && (
                 <Box
@@ -208,6 +294,46 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
               </Box>
             </HStack>
           ))}
+
+          {/* Loading indicator */}
+          {isLoading && (
+            <HStack alignSelf="flex-start" align="flex-start" spacing={3} maxW="85%">
+              <Box
+                w="48px"
+                h="48px"
+                borderRadius="full"
+                bg="green.800"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexShrink={0}
+                overflow="hidden"
+                p={2}
+              >
+                <ChakraImage 
+                  src={appleIcon} 
+                  alt="NutriBot" 
+                  w="80%"
+                  h="80%"
+                  objectFit="contain"
+                  filter="brightness(0) invert(1)"
+                />
+              </Box>
+              <Box
+                bg={isDarkMode ? 'gray.700' : 'gray.200'}
+                p={4}
+                borderTopRightRadius="4xl"
+                borderBottomLeftRadius="4xl"
+                borderBottomRightRadius="4xl"
+              >
+                <HStack spacing={2}>
+                  <Spinner size="sm" />
+                  <Text fontSize={getFontSize()}>Skriver...</Text>
+                </HStack>
+              </Box>
+            </HStack>
+          )}
+
           <div ref={messagesEndRef} />
         </VStack>
 
@@ -225,6 +351,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
             border="none"
             _placeholder={{ color: 'gray.400' }}
             _focus={{ boxShadow: 'none' }}
+            disabled={isLoading}
           />
           <IconButton
             aria-label="Send message"
@@ -233,6 +360,8 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
             _hover={{ bg: 'green.600' }}
             borderRadius="xl"
             size="lg"
+            isLoading={isLoading}
+            disabled={isLoading || !inputValue.trim()}
           >
             <ChakraImage 
               src={sendIcon} 
