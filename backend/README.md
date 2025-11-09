@@ -25,7 +25,7 @@ Install Python libraries
 ```
 Login into AI Foundry
 ```bash
-  az login
+  az login --tenant <tenant-id>
 ```
 Pick the correct subscription 
 
@@ -38,10 +38,10 @@ Start the server
 
 ## Local test
 
-Send this command to http://127.0.0.1:8000/chat
+Send this JSON to http://127.0.0.1:8000/chat using POSTMAN
 ```json
 {
-  "input": "Hva heter jeg?",
+  "input": "Test test",
   "threadID": null
 }
 ```
