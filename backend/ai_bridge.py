@@ -79,9 +79,6 @@ def getChat(request : ChatRequest):
 
     assistantOutput= "No message"
 
-    assistantOutput =messages[0].content[0].text.value
-
-            
-    
+    assistantOutput = messages[0].content[0].text.value
 
     return ChatResponse(response=assistantOutput,threadID=threadID)
