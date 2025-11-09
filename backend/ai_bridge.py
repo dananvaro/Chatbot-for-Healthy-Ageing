@@ -26,6 +26,7 @@ project = AIProjectClient(
     endpoint=azureEndpoint
 )
 
+# BaseModel checks for correct input
 class ChatRequest(BaseModel):
     input: str
     threadID: Optional[str] = None
@@ -41,16 +42,42 @@ class ChatResponse(BaseModel):
 
 
 """
-
-app.post("/chat",response_model=ChatResponse)
+# Api that only takes in values similar to chatresponse
+@app.post("/chat",response_model=ChatResponse)
 def getChat(request : ChatRequest): 
 
     # Checks if thread exists if not creates a new one
     if request.threadID == None:
         
         thread =project.agents.threads.create()
-        threadID = thread.id()
+        threadID = thread.id
     else:
         threadID = request.threadID
 
-    project.agents.threads
+
+    # Adds the message to a newly created thread or continued on existing thread
+    project.agents.messages.create(
+        thread_id = threadID,
+        role="user",
+        content = request.input
+    )
+
+    run = project.agents.runs.create_and_process(
+        thread_id= threadID,
+        agent_id= azureAgent
+    )
+
+    messages = list(project.agents.messages.list(
+        thread_id=threadID,
+        order=ListSortOrder.DESCENDING
+
+    ))
+
+    assistantOutput= "No message"
+
+    for message in messages:
+        if (message.role == "assistant" and message.content):
+            assistantOutput = message.content[0].text.valie
+            break  
+
+    return ChatResponse(response=assistantOutput,threadID=threadID)
