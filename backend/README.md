@@ -16,14 +16,18 @@ Clone the project
 Go to the project directory
 
 ```bash
-  cd frontend
+  cd backend
 ```
-
 Install Python libraries
 
 ```bash
   pip install openai azure-ai-projects azure-identity "fastapi[standard]" python-dotenv uvicorn
 ```
+Login into AI Foundry
+```bash
+  az login
+```
+Pick the correct subscription 
 
 Start the server
 
@@ -32,11 +36,13 @@ Start the server
 ```
 
 
-## Running Tests
+## Local test
 
-To run tests, run the following command
-
-```bash
-  npm run test
+Send this command to http://127.0.0.1:8000/chat
+```json
+{
+  "input": "Hva heter jeg?",
+  "threadID": null
+}
 ```
 
