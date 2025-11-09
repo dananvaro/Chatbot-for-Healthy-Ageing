@@ -62,11 +62,13 @@ def getChat(request : ChatRequest):
         content = request.input
     )
 
+    # Does a request and wait till it gets a response
     run = project.agents.runs.create_and_process(
         thread_id= threadID,
         agent_id= azureAgent
     )
 
+    # A list of messages in the thread
     messages = list(project.agents.messages.list(
         thread_id=threadID,
         order=ListSortOrder.DESCENDING
@@ -75,9 +77,18 @@ def getChat(request : ChatRequest):
 
     assistantOutput= "No message"
 
-    for message in messages:
-        if (message.role == "assistant" and message.content):
-            assistantOutput = message.content[0].text.valie
-            break  
+    # Gets the last message
+    if not messages == None:
+        
+        
+        
+        getLastMessage = messages[0]
+        if (getLastMessage.role == "assistant" and getLastMessage.completed_at):
+        
+            
+            assistantOutput = getLastMessage.content[0]
+
+            
+    
 
     return ChatResponse(response=assistantOutput,threadID=threadID)
