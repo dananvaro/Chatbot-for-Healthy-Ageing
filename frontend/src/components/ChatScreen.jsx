@@ -33,6 +33,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [threadID, setThreadID] = useState(null); // Add this to track conversation thread
   const messagesEndRef = useRef(null);
 
   // Bot settings state
@@ -151,7 +152,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
       text: inputValue
     };
 
-    // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setError(null);
@@ -159,28 +159,32 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
 
     try {
       let botResponse;
+      let newThreadID = threadID;
 
       if (backendAvailable) {
-        // Backend is available - make real API call
-        const apiMessages = [...formatMessagesForAPI(), {
-          role: 'user',
-          content: userMessage.text
-        }];
+        const systemPrompt = buildSystemPrompt();
 
         const response = await sendChatMessage(
-          apiMessages,
+          userMessage.text,
+          threadID,
+          systemPrompt,
           botSettings,
           onboardingData
         );
 
-        botResponse = response.message || response.content;
+        botResponse = response.response;
+        newThreadID = response.threadID;
+
+        // Store thread ID for conversation continuity
+        if (!threadID) {
+          setThreadID(newThreadID);
+          console.log('New thread created:', newThreadID);
+        }
       } else {
-        // Backend not available - use mock response
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
         botResponse = getMockResponse(userMessage.text);
       }
 
-      // Add bot response
       const botMessage = {
         id: messages.length + 2,
         type: 'bot',
@@ -192,7 +196,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
       console.error('Error sending message:', err);
       setError('Kunne ikke sende meldingen. Vennligst prøv igjen.');
       
-      // Add error message to chat
       const errorMessage = {
         id: messages.length + 2,
         type: 'bot',
