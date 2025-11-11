@@ -15,11 +15,11 @@ function App() {
   return (
     <Box 
       minH="100vh" 
+      minW="100vw"
       bg="gray.300" 
       display="flex" 
       alignItems="center" 
       justifyContent="center"
-      p={4}
     >
       {showOnboarding ? (
         <OnboardingCard onComplete={handleOnboardingComplete} />

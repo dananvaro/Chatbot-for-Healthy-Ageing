@@ -5,15 +5,22 @@ import {
   VStack,
   HStack,
   Text,
+  Heading,
   IconButton,
   Image as ChakraImage,
-  Spinner
+  Spinner,
+  Button
 } from '@chakra-ui/react';
+import { MessageCircle, ChevronRight, Send, MessageCircleMore } from 'lucide-react';
 import Logo from './Logo';
-import SettingsSidebar from './SettingsSidebar';
-import AccessibilitySidebar from './AccessibilitySidebar';
-import sendIcon from '../assets/send-icon.png';
+import messageIcon from '../assets/message-icon-2.png';
 import appleIcon from '../assets/apple-icon.png';
+import settingsIcon from '../assets/settings-icon.png';
+import accessibilityIcon from '../assets/accessibility-icon.png';
+import accessibilityIcon2 from '../assets/accessibility-icon-2.png';
+import settingsIcon2 from '../assets/settings-icon-2.png';
+import preferencesIcon from '../assets/preferences-icon.png';
+import sendIcon2 from '../assets/send-icon-2.png';
 import { sendChatMessage, checkBackendHealth, updatePreferences } from '../services/chatService';
 
 const ChatScreen = ({ userPreferences, onboardingData }) => {
@@ -33,7 +40,8 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
-  const [threadID, setThreadID] = useState(null); // Add this to track conversation thread
+  const [threadID, setThreadID] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState('current');
   const messagesEndRef = useRef(null);
 
   // Bot settings state
@@ -43,6 +51,14 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     showSources: false,
     language: 'no'
   });
+
+  // Mock previous conversations for the sidebar
+  const previousConversations = [
+    { id: 1, preview: 'Hvor mye protein ...' },
+    { id: 2, preview: 'Hvordan kan jeg  ...' },
+    { id: 3, preview: 'Hvilken type mat ...' },
+    { id: 4, preview: 'Kan man bruke me ...' }
+  ];
 
   // Check backend health on mount
   useEffect(() => {
@@ -69,13 +85,11 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     let prompt = "Du er NutriBot, en hjelpsom ernæringsassistent for eldre.";
     
     if (onboardingData) {
-      // Allergies (step 2)
       if (onboardingData[2] && onboardingData[2].length > 0) {
         prompt += `\n\nBrukeren har følgende allergier eller kostpreferanser: ${onboardingData[2].join(', ')}.`;
         prompt += " Ta hensyn til dette i alle anbefalinger.";
       }
       
-      // Health conditions (step 3)
       if (onboardingData[3] && onboardingData[3].length > 0) {
         prompt += `\n\nBrukeren har følgende helseutfordringer: ${onboardingData[3].join(', ')}.`;
         prompt += " Tilpass kostholdsrådene til disse tilstandene.";
@@ -106,30 +120,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     return prompt;
   };
 
-  // Convert messages to API format
-  const formatMessagesForAPI = () => {
-    const systemPrompt = buildSystemPrompt();
-    
-    // Start with system message
-    const apiMessages = [
-      {
-        role: 'system',
-        content: systemPrompt
-      }
-    ];
-    
-    // Add conversation history (skip the initial bot greeting)
-    messages.slice(1).forEach(msg => {
-      apiMessages.push({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.text
-      });
-    });
-    
-    return apiMessages;
-  };
-
-  // Mock response for when backend is not available
   const getMockResponse = (userMessage) => {
     const responses = {
       default: 'Beklager, Nutribot er ikke tilgjengelig for øyeblikket. Dette er en automatisk-respons. Ditt spørsmål var: "' + userMessage + '"',
@@ -175,7 +165,6 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
         botResponse = response.response;
         newThreadID = response.threadID;
 
-        // Store thread ID for conversation continuity
         if (!threadID) {
           setThreadID(newThreadID);
           console.log('New thread created:', newThreadID);
@@ -214,15 +203,12 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     }
   };
 
-  // Map text size to font sizes
   const getFontSize = () => {
     const sizes = ['xs', 'sm', 'md', 'lg', 'xl'];
     return sizes[textSize - 1];
   };
 
-  // Add this useEffect to sync settings when they change
   useEffect(() => {
-    // Only update if we have a thread ID and backend is available
     if (threadID && backendAvailable) {
       const syncPreferences = async () => {
         try {
@@ -238,114 +224,217 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   }, [botSettings, threadID, backendAvailable, onboardingData]);
 
   return (
-    <Box minH="100vh" bg={isDarkMode ? 'gray.900' : 'gray.300'} p={0} position="relative">
+    <Box width="100vw" height="100vh" bg="gray.100" display="flex" justifyContent="center" p={12} gap={12}>
+      {/* Left Sidebar */}
       <Box
-        maxW="1600px"
-        w="60vw"
-        h="90vh"
-        bg={isDarkMode ? 'gray.800' : 'white'}
+        w="15%"
+        minW="240px"
+        bg="white"
         borderRadius="xl"
-        margin="5vh auto"
         display="flex"
         flexDirection="column"
+        flexShrink={0}
+        boxShadow="sm"
       >
-        {/* Header */}
-        <HStack pl={16} pt={16} pb={8} justify="space-between">
+        {/* Logo */}
+        <Box p={6}>
           <Logo size="lg" />
-          {!backendAvailable && (
-            <Text fontSize="sm" color="orange.500" fontWeight="medium">
-              ⚠️ Backend ikke tilkoblet
-            </Text>
-          )}
-        </HStack>
+        </Box>
 
-        {/* Error Alert */}
-        {error && (
-          <Box mx={6} mb={4} p={3} bg="red.100" borderRadius="md">
-            <Text color="red.800" fontSize="sm">{error}</Text>
-          </Box>
-        )}
+        {/* Current Conversation dark grey */}
+        <Box mb={6}>
+          <Button
+            w="100%"
+            bg="gray.800"
+            color="white"
+            _hover={{ bg: 'gray.600' }}
+            justifyContent="flex-start"
+            fontWeight="bold"
+            fontSize="md"
+            borderRadius={0}
+            h="60px"
+            position="relative"
+          >
+            <HStack ml={2}>
+              <ChakraImage src={messageIcon} alt="Samtale" boxSize="28px" />
+              <Text ml={6}>Samtale</Text>
+            </HStack>
+          </Button>
+        </Box>
+
+        {/* Previous Conversations */}
+        <Box flex="1" overflowY="auto" px={4}>
+          <Text fontSize="md" fontWeight="bold" color="gray.600" mb={2} px={2}>
+            Tidligere samtaler
+          </Text>
+          <VStack spacing={1} align="stretch" ml={2} mr={2}>
+            {previousConversations.map((conv) => (
+              <Button
+                key={conv.id}
+                w="100%"                
+                bg="gray.100"
+                color="gray.700"
+                _hover={{ bg: 'gray.300' }}
+                justifyContent="space-between"
+                fontWeight="normal"
+                fontSize="sm"
+                h="40px"
+                borderRadius="md"
+                px={3}
+              >
+                <Text fontWeight="medium" isTruncated>{conv.preview}</Text>
+                <ChevronRight size={24} />
+              </Button>
+            ))}
+          </VStack>
+        </Box>
+
+        {/* Bottom Menu Items */}
+        <VStack spacing={0} borderColor="gray.200" ml={2} mr={2} mb={4}>
+          <Button
+            w="100%"
+            bg="transparent"
+            color="gray.800"
+            _hover={{ bg: 'gray.200' }}
+            justifyContent="flex-start"
+            fontWeight="semibold"
+            fontSize="md"
+            h="56px"
+            borderRadius="md"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <ChakraImage src={preferencesIcon} alt="Tilpass Nutribot" boxSize="28px" />
+            <Text ml={2}>Tilpass Nutribot</Text>
+          </Button>
+          <Button
+            w="100%"
+            bg="transparent"
+            color="gray.800"
+            _hover={{ bg: 'gray.200' }}
+            justifyContent="flex-start"
+            fontWeight="semibold"
+            fontSize="md"
+            h="56px"
+            borderRadius="md"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <ChakraImage src={settingsIcon2} alt="Innstillinger" boxSize="28px" />
+            <Text ml={2}>Innstillinger</Text>
+          </Button>
+          <Button
+            w="100%"
+            bg="transparent"
+            color="gray.800"
+            _hover={{ bg: 'gray.200' }}
+            justifyContent="flex-start"            
+            fontWeight="semibold"
+            fontSize="md"
+            h="56px"
+            borderRadius="md"
+            onClick={() => setShowAccessibility(!showAccessibility)}
+          >
+            <ChakraImage src={accessibilityIcon2} alt="Tilgjengelighet" boxSize="28px" />
+            <Text ml={2}>Tilgjengelighet</Text>
+          </Button>
+        </VStack>
+      </Box>
+
+      {/* Main Chat Area */}
+      <Box maxW="1200px" px={8} flex="1" display="flex" flexDirection="column" bg="white" borderRadius="xl" boxShadow="sm" overflow="hidden" >
+        {/* Chat Header */}
+        <Box
+          bg="white"
+          borderColor="gray.200"
+          px={8}
+          pt={8}
+        >
+          <Heading size="4xl" color="gray.800" fontWeight="bold">
+            Samtale
+          </Heading>
+        </Box>
 
         {/* Messages Area */}
-        <VStack pl={16} pr={6} spacing={4} align="stretch" flex="1" overflowY="auto">
+        <VStack
+          flex="1"
+          overflowY="auto"
+          px={8}
+          py={6}
+          spacing={4}
+          align="stretch"
+        >
           {messages.map((message) => (
             <HStack
               key={message.id}
               alignSelf={message.type === 'user' ? 'flex-end' : 'flex-start'}
               align="flex-start"
               spacing={3}
-              maxW="100%"
+              maxW="70%"
             >
               {message.type === 'bot' && (
                 <Box
-                  w="48px"
-                  h="48px"
-                  borderRadius="full"
+                  w="40px"
+                  h="40px"
+                  borderRadius="full"                  
                   bg="green.800"
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
                   flexShrink={0}
-                  overflow="hidden"
                   p={2}
                 >
                   <ChakraImage 
                     src={appleIcon} 
                     alt="NutriBot" 
-                    w="80%"
-                    h="80%"
+                    w="100%"
+                    h="100%"
                     objectFit="contain"
                     filter="brightness(0) invert(1)"
                   />
                 </Box>
               )}
               <Box
-                bg={message.type === 'user' ? 'green.800' : (isDarkMode ? 'gray.700' : 'gray.200')}
-                color={message.type === 'user' ? 'white' : (isDarkMode ? 'white' : 'black')}
-                p={4}
-                borderTopLeftRadius={message.type === 'user' ? '4xl' : 'sm'}
-                borderTopRightRadius={message.type === 'user' ? 'sm' : '4xl'}
-                borderBottomLeftRadius="4xl"
-                borderBottomRightRadius="4xl"
+                bg={message.type === 'user' ? 'green.800' : 'gray.200'}
+                color={message.type === 'user' ? 'white' : 'black'}
+                p={2}
+                borderRadius="xl"
+                borderBottomRightRadius={message.type === "user" ? "3xl" : "4xl"}
+                borderBottomLeftRadius={message.type === "user" ? "4xl" : "3xl"}
+                borderTopLeftRadius={message.type === 'user' ? '4xl' : '0'}
+                borderTopRightRadius={message.type === 'user' ? '0' : '4xl'}
                 whiteSpace="pre-wrap"
                 wordBreak="break-word"
               >
-                <Text fontSize={getFontSize()} whiteSpace="pre-line">{message.text}</Text>
+                <Text fontSize={getFontSize()} whiteSpace="pre-line" mr={4} ml={4}>
+                  {message.text}
+                </Text>
               </Box>
             </HStack>
           ))}
 
           {/* Loading indicator */}
           {isLoading && (
-            <HStack alignSelf="flex-start" align="flex-start" spacing={3} maxW="85%">
+            <HStack alignSelf="flex-start" align="flex-start" spacing={3} maxW="70%">
               <Box
-                w="48px"
-                h="48px"
+                w="40px"
+                h="40px"
                 borderRadius="full"
                 bg="green.800"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
                 flexShrink={0}
-                overflow="hidden"
                 p={2}
               >
                 <ChakraImage 
                   src={appleIcon} 
                   alt="NutriBot" 
-                  w="80%"
-                  h="80%"
+                  w="100%"
+                  h="100%"
                   objectFit="contain"
                   filter="brightness(0) invert(1)"
                 />
               </Box>
-              <Box
-                bg={isDarkMode ? 'gray.700' : 'gray.200'}
-                p={4}
-                borderTopRightRadius="4xl"
-                borderBottomLeftRadius="4xl"
-                borderBottomRightRadius="4xl"
-              >
+              <Box bg="gray.200" p={4} borderRadius="2xl">
                 <HStack spacing={2}>
                   <Spinner size="sm" />
                   <Text fontSize={getFontSize()}>Skriver...</Text>
@@ -358,76 +447,48 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
         </VStack>
 
         {/* Input Area */}
-        <HStack p={6} borderTop="1px solid" borderColor={isDarkMode ? 'gray.700' : 'gray.200'} spacing={3}>
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Spør om hva som helst"
-            bg={isDarkMode ? 'gray.700' : 'gray.800'}
-            color="white"
-            size="lg"
-            borderRadius="xl"
-            border="none"
-            _placeholder={{ color: 'gray.400' }}
-            _focus={{ boxShadow: 'none' }}
-            disabled={isLoading}
-          />
-          <IconButton
-            aria-label="Send message"
-            onClick={handleSendMessage}
-            bg="green.800"
-            _hover={{ bg: 'green.600' }}
-            borderRadius="xl"
-            size="lg"
-            isLoading={isLoading}
-            disabled={isLoading || !inputValue.trim()}
-          >
-            <ChakraImage 
-              src={sendIcon} 
-              alt="Send" 
-              boxSize="20px"
-              filter="brightness(0) invert(1)"
+        <Box bg="white" borderColor="gray.200" px={8} py={6} ml={12} mr={4}>
+          <HStack spacing={3}>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Spør om hva som helst"
+              bg="gray.800"
+              color="white"
+              size="lg"
+              h="56px"
+              borderRadius="xl"
+              border="none"
+              fontSize="md"
+              _placeholder={{ color: 'gray.400' }}
+              _focus={{ boxShadow: 'none' }}
+              disabled={isLoading}
             />
-          </IconButton>
-        </HStack>
+            <HStack>
+              <Button
+                aria-label="Send message"
+                onClick={handleSendMessage}
+                bg="green.800"
+                _hover={{ bg: 'green.600' }}
+                isLoading={isLoading}
+                disabled={isLoading || !inputValue.trim()}
+                borderRadius="xl"
+                h="56px"
+              >
+                <ChakraImage
+                  src={sendIcon2}
+                  alt="Send"                  
+                  h="12px"
+                  objectFit="contain"
+                  filter="brightness(0) invert(1)"
+                />
+                <Text fontSize={getFontSize()} fontWeight="bold" color="white">Send</Text>
+              </Button>
+            </HStack>
+          </HStack>
+        </Box>
       </Box>
-
-      {/* Overlays */}
-      {(showSettings || showAccessibility) && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="rgba(0, 0, 0, 0.5)"
-          zIndex={998}
-          onClick={() => {
-            setShowSettings(false);
-            setShowAccessibility(false);
-          }}
-        />
-      )}
-      
-      {/* Sidebars */}
-      <SettingsSidebar 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)}
-        onToggle={() => setShowSettings(!showSettings)}
-        settings={botSettings}
-        onSettingsChange={setBotSettings}
-      />
-      
-      <AccessibilitySidebar 
-        isOpen={showAccessibility} 
-        onClose={() => setShowAccessibility(false)}
-        onToggle={() => setShowAccessibility(!showAccessibility)}
-        textSize={textSize}
-        onTextSizeChange={setTextSize}
-        isDarkMode={isDarkMode}
-        onDarkModeChange={setIsDarkMode}
-      />
     </Box>
   );
 };
