@@ -14,7 +14,7 @@ import SettingsSidebar from './SettingsSidebar';
 import AccessibilitySidebar from './AccessibilitySidebar';
 import sendIcon from '../assets/send-icon.png';
 import appleIcon from '../assets/apple-icon.png';
-import { sendChatMessage, checkBackendHealth } from '../services/chatService';
+import { sendChatMessage, checkBackendHealth, updatePreferences } from '../services/chatService';
 
 const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [messages, setMessages] = useState([
@@ -219,6 +219,23 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     const sizes = ['xs', 'sm', 'md', 'lg', 'xl'];
     return sizes[textSize - 1];
   };
+
+  // Add this useEffect to sync settings when they change
+  useEffect(() => {
+    // Only update if we have a thread ID and backend is available
+    if (threadID && backendAvailable) {
+      const syncPreferences = async () => {
+        try {
+          await updatePreferences(threadID, botSettings, onboardingData);
+          console.log('Preferences synced to backend');
+        } catch (error) {
+          console.error('Failed to sync preferences:', error);
+        }
+      };
+
+      syncPreferences();
+    }
+  }, [botSettings, threadID, backendAvailable, onboardingData]);
 
   return (
     <Box minH="100vh" bg={isDarkMode ? 'gray.900' : 'gray.300'} p={0} position="relative">

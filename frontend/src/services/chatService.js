@@ -32,8 +32,6 @@ export const sendChatMessage = async (userMessage, threadID, systemPrompt, setti
       body: JSON.stringify(requestBody),
     });
 
-    console.log('Response status:', response.status);
-
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Backend error:', errorData);
@@ -41,10 +39,55 @@ export const sendChatMessage = async (userMessage, threadID, systemPrompt, setti
     }
 
     const data = await response.json();
-    console.log('Backend response:', data);
     return data;
   } catch (error) {
     console.error('Error sending chat message:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user preferences on the backend
+ */
+export const updatePreferences = async (threadID, settings, onboardingData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/preferences`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        threadID,
+        settings,
+        onboardingData,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating preferences:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get stored preferences from backend
+ */
+export const getPreferences = async (threadID) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/preferences/${threadID}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting preferences:', error);
     throw error;
   }
 };
