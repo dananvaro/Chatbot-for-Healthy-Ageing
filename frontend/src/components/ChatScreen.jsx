@@ -13,11 +13,15 @@ import {
 } from '@chakra-ui/react';
 import { MessageCircle, ChevronRight, Send, MessageCircleMore } from 'lucide-react';
 import Logo from './Logo';
+import SettingsSidebar from './SettingsSidebar';
+import AccessibilitySidebar from './AccessibilitySidebar';
 import messageIcon from '../assets/message-icon-2.png';
+import messageIconBlack from '../assets/message-icon-2-black.png';
 import appleIcon from '../assets/apple-icon.png';
 import settingsIcon from '../assets/settings-icon.png';
 import accessibilityIcon from '../assets/accessibility-icon.png';
 import accessibilityIcon2 from '../assets/accessibility-icon-2.png';
+import accessibilityIconDarkBg from '../assets/accessibility-icon-dark-bg.png';
 import settingsIcon2 from '../assets/settings-icon-2.png';
 import preferencesIcon from '../assets/preferences-icon.png';
 import sendIcon2 from '../assets/send-icon-2.png';
@@ -35,6 +39,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [inputValue, setInputValue] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [activeView, setActiveView] = useState('chat'); // 'chat', 'settings', or 'accessibility'
   const [textSize, setTextSize] = useState(3);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -245,18 +250,25 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
         <Box mb={6}>
           <Button
             w="100%"
-            bg="gray.800"
-            color="white"
-            _hover={{ bg: 'gray.600' }}
+            bg={activeView === 'chat' ? "gray.800" : "transparent"}
+            color={activeView === 'chat' ? "white" : "gray.800"}
+            _hover={{ bg: activeView === 'chat' ? 'gray.600' : 'gray.200' }}
             justifyContent="flex-start"
-            fontWeight="bold"
+            fontWeight={activeView === 'chat' ? "bold" : "semibold"}
             fontSize="md"
             borderRadius={0}
             h="60px"
             position="relative"
+            onClick={() => setActiveView('chat')}
           >
             <HStack ml={2}>
-              <ChakraImage src={messageIcon} alt="Samtale" boxSize="28px" />
+              <ChakraImage
+                src={activeView === 'chat' ? messageIcon : messageIconBlack}
+                alt="Samtale"
+                boxSize="28px"
+                filter={activeView === 'chat' ? 'brightness(0) invert(1)' : 'none'}
+                transition="filter 0.2s"
+              />
               <Text ml={6}>Samtale</Text>
             </HStack>
           </Button>
@@ -290,91 +302,141 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
         </Box>
 
         {/* Bottom Menu Items */}
-        <VStack spacing={0} borderColor="gray.200" ml={2} mr={2} mb={4}>
+        <VStack spacing={0} borderColor="gray.200" mb={4}>
           <Button
             w="100%"
-            bg="transparent"
-            color="gray.800"
-            _hover={{ bg: 'gray.200' }}
+            bg={activeView === 'preferences' ? "gray.800" : "transparent"}
+            color={activeView === 'preferences' ? "white" : "gray.800"}
+            _hover={{ bg: activeView === 'preferences' ? 'gray.600' : 'gray.200' }}
             justifyContent="flex-start"
             fontWeight="semibold"
             fontSize="md"
             h="56px"
-            borderRadius="md"
-            onClick={() => setShowSettings(!showSettings)}
+            borderRadius={0}
+            onClick={() => setActiveView('preferences')}
           >
-            <ChakraImage src={preferencesIcon} alt="Tilpass Nutribot" boxSize="28px" />
+            <ChakraImage 
+              src={preferencesIcon} 
+              alt="Tilpass Nutribot" 
+              boxSize="28px" 
+              filter={activeView === 'preferences' ? 'brightness(0) invert(1)' : 'none'}
+              transition="filter 0.2s"
+            />
             <Text ml={2}>Tilpass Nutribot</Text>
           </Button>
           <Button
             w="100%"
-            bg="transparent"
-            color="gray.800"
-            _hover={{ bg: 'gray.200' }}
+            bg={activeView === 'settings' ? "gray.800" : "transparent"}
+            color={activeView === 'settings' ? "white" : "gray.800"}
+            _hover={{ bg: activeView === 'settings' ? 'gray.600' : 'gray.200' }}
             justifyContent="flex-start"
             fontWeight="semibold"
             fontSize="md"
             h="56px"
-            borderRadius="md"
-            onClick={() => setShowSettings(!showSettings)}
+            borderRadius={0}
+            onClick={() => setActiveView('settings')}
           >
-            <ChakraImage src={settingsIcon2} alt="Innstillinger" boxSize="28px" />
+            <ChakraImage 
+              src={settingsIcon2} 
+              alt="Innstillinger" 
+              boxSize="28px" 
+              filter={activeView === 'settings' ? 'brightness(0) invert(1)' : 'none'}
+              transition="filter 0.2s"
+            />
             <Text ml={2}>Innstillinger</Text>
           </Button>
           <Button
             w="100%"
-            bg="transparent"
-            color="gray.800"
-            _hover={{ bg: 'gray.200' }}
+            bg={activeView === 'accessibility' ? "gray.800" : "transparent"}
+            color={activeView === 'accessibility' ? "white" : "gray.800"}
+            _hover={{ bg: activeView === 'accessibility' ? 'gray.600' : 'gray.200' }}
             justifyContent="flex-start"            
             fontWeight="semibold"
             fontSize="md"
             h="56px"
-            borderRadius="md"
-            onClick={() => setShowAccessibility(!showAccessibility)}
+            borderRadius={0}
+            onClick={() => { setActiveView('accessibility'); setShowAccessibility(true); }}
           >
-            <ChakraImage src={accessibilityIcon2} alt="Tilgjengelighet" boxSize="28px" />
+            <ChakraImage 
+              src={activeView === 'accessibility' ? accessibilityIconDarkBg : accessibilityIcon2} 
+              alt="Tilgjengelighet" 
+              boxSize="28px" 
+              filter={activeView === 'accessibility' ? 'brightness(0) invert(1)' : 'none'}
+              transition="filter 0.2s"
+            />
             <Text ml={2}>Tilgjengelighet</Text>
           </Button>
         </VStack>
       </Box>
 
-      {/* Main Chat Area */}
-      <Box maxW="1200px" px={8} flex="1" display="flex" flexDirection="column" bg="white" borderRadius="xl" boxShadow="sm" overflow="hidden" >
-        {/* Chat Header */}
-        <Box
-          bg="white"
-          borderColor="gray.200"
-          px={8}
-          pt={8}
-        >
-          <Heading size="4xl" color="gray.800" fontWeight="bold">
-            Samtale
-          </Heading>
-        </Box>
+      {/* Main Content Area - Conditional Rendering */}
+      {activeView === 'chat' && (
+        <Box maxW="1200px" px={8} flex="1" display="flex" flexDirection="column" bg="white" borderRadius="xl" boxShadow="sm" overflow="hidden">
+          {/* Chat Header */}
+          <Box bg="white" borderColor="gray.200" px={8} pt={8}>
+            <Heading size="4xl" color="gray.800" fontWeight="bold">
+              Samtale
+            </Heading>
+          </Box>
 
-        {/* Messages Area */}
-        <VStack
-          flex="1"
-          overflowY="auto"
-          px={8}
-          py={6}
-          spacing={4}
-          align="stretch"
-        >
-          {messages.map((message) => (
-            <HStack
-              key={message.id}
-              alignSelf={message.type === 'user' ? 'flex-end' : 'flex-start'}
-              align="flex-start"
-              spacing={3}
-              maxW="70%"
-            >
-              {message.type === 'bot' && (
+          {/* Messages Area */}
+          <VStack flex="1" overflowY="auto" px={8} py={6} spacing={4} align="stretch">
+            {messages.map((message) => (
+              <HStack
+                key={message.id}
+                alignSelf={message.type === 'user' ? 'flex-end' : 'flex-start'}
+                align="flex-start"
+                spacing={3}
+                maxW="70%"
+              >
+                {message.type === 'bot' && (
+                  <Box
+                    w="40px"
+                    h="40px"
+                    borderRadius="full"                  
+                    bg="green.800"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    flexShrink={0}
+                    p={2}
+                  >
+                    <ChakraImage 
+                      src={appleIcon} 
+                      alt="NutriBot" 
+                      w="100%"
+                      h="100%"
+                      objectFit="contain"
+                      filter="brightness(0) invert(1)"
+                    />
+                  </Box>
+                )}
+                <Box
+                  bg={message.type === 'user' ? 'green.800' : 'gray.200'}
+                  color={message.type === 'user' ? 'white' : 'black'}
+                  p={2}
+                  borderRadius="xl"
+                  borderBottomRightRadius={message.type === "user" ? "3xl" : "4xl"}
+                  borderBottomLeftRadius={message.type === "user" ? "4xl" : "3xl"}
+                  borderTopLeftRadius={message.type === 'user' ? '4xl' : '0'}
+                  borderTopRightRadius={message.type === 'user' ? '0' : '4xl'}
+                  whiteSpace="pre-wrap"
+                  wordBreak="break-word"
+                >
+                  <Text fontSize={getFontSize()} whiteSpace="pre-line" mr={4} ml={4}>
+                    {message.text}
+                  </Text>
+                </Box>
+              </HStack>
+            ))}
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <HStack alignSelf="flex-start" align="flex-start" spacing={3} maxW="70%">
                 <Box
                   w="40px"
                   h="40px"
-                  borderRadius="full"                  
+                  borderRadius="full"
                   bg="green.800"
                   display="flex"
                   alignItems="center"
@@ -391,81 +453,37 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
                     filter="brightness(0) invert(1)"
                   />
                 </Box>
-              )}
-              <Box
-                bg={message.type === 'user' ? 'green.800' : 'gray.200'}
-                color={message.type === 'user' ? 'white' : 'black'}
-                p={2}
+                <Box bg="gray.200" p={4} borderRadius="2xl">
+                  <HStack spacing={2}>
+                    <Spinner size="sm" />
+                    <Text fontSize={getFontSize()}>Skriver...</Text>
+                  </HStack>
+                </Box>
+              </HStack>
+            )}
+
+            <div ref={messagesEndRef} />
+          </VStack>
+
+          {/* Input Area */}
+          <Box bg="white" borderColor="gray.200" px={8} py={6} ml={12} mr={4}>
+            <HStack spacing={3}>
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Spør om hva som helst"
+                bg="gray.800"
+                color="white"
+                size="lg"
+                h="56px"
                 borderRadius="xl"
-                borderBottomRightRadius={message.type === "user" ? "3xl" : "4xl"}
-                borderBottomLeftRadius={message.type === "user" ? "4xl" : "3xl"}
-                borderTopLeftRadius={message.type === 'user' ? '4xl' : '0'}
-                borderTopRightRadius={message.type === 'user' ? '0' : '4xl'}
-                whiteSpace="pre-wrap"
-                wordBreak="break-word"
-              >
-                <Text fontSize={getFontSize()} whiteSpace="pre-line" mr={4} ml={4}>
-                  {message.text}
-                </Text>
-              </Box>
-            </HStack>
-          ))}
-
-          {/* Loading indicator */}
-          {isLoading && (
-            <HStack alignSelf="flex-start" align="flex-start" spacing={3} maxW="70%">
-              <Box
-                w="40px"
-                h="40px"
-                borderRadius="full"
-                bg="green.800"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                flexShrink={0}
-                p={2}
-              >
-                <ChakraImage 
-                  src={appleIcon} 
-                  alt="NutriBot" 
-                  w="100%"
-                  h="100%"
-                  objectFit="contain"
-                  filter="brightness(0) invert(1)"
-                />
-              </Box>
-              <Box bg="gray.200" p={4} borderRadius="2xl">
-                <HStack spacing={2}>
-                  <Spinner size="sm" />
-                  <Text fontSize={getFontSize()}>Skriver...</Text>
-                </HStack>
-              </Box>
-            </HStack>
-          )}
-
-          <div ref={messagesEndRef} />
-        </VStack>
-
-        {/* Input Area */}
-        <Box bg="white" borderColor="gray.200" px={8} py={6} ml={12} mr={4}>
-          <HStack spacing={3}>
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Spør om hva som helst"
-              bg="gray.800"
-              color="white"
-              size="lg"
-              h="56px"
-              borderRadius="xl"
-              border="none"
-              fontSize="md"
-              _placeholder={{ color: 'gray.400' }}
-              _focus={{ boxShadow: 'none' }}
-              disabled={isLoading}
-            />
-            <HStack>
+                border="none"
+                fontSize="md"
+                _placeholder={{ color: 'gray.400' }}
+                _focus={{ boxShadow: 'none' }}
+                disabled={isLoading}
+              />
               <Button
                 aria-label="Send message"
                 onClick={handleSendMessage}
@@ -476,19 +494,29 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
                 borderRadius="xl"
                 h="56px"
               >
-                <ChakraImage
-                  src={sendIcon2}
-                  alt="Send"                  
-                  h="12px"
-                  objectFit="contain"
-                  filter="brightness(0) invert(1)"
-                />
+                <ChakraImage src={sendIcon2} alt="Send" h="12px" objectFit="contain" filter="brightness(0) invert(1)" />
                 <Text fontSize={getFontSize()} fontWeight="bold" color="white">Send</Text>
               </Button>
             </HStack>
-          </HStack>
+          </Box>
         </Box>
-      </Box>
+      )}
+
+      {(activeView === 'settings' || activeView === 'preferences') && (
+        <SettingsSidebar 
+          settings={botSettings}
+          onSettingsChange={setBotSettings}
+        />
+      )}
+
+      {activeView === 'accessibility' && (
+        <AccessibilitySidebar 
+          textSize={textSize}
+          onTextSizeChange={setTextSize}
+          isDarkMode={isDarkMode}
+          onDarkModeChange={setIsDarkMode}
+        />
+      )}
     </Box>
   );
 };
