@@ -70,4 +70,40 @@ const onboardingSteps = [
   },
 ];
 
+// Preferences menu options
+export const healthOptions = [
+    { emoji: '🍬', label: 'Diabetes' },
+    { emoji: '🫀', label: 'Kolesterol' },
+    { emoji: '🩸', label: 'Blodtrykk' },
+    { emoji: '⚖️', label: 'Overvekt' },
+    { emoji: '😴', label: 'Lav energi' },
+    { emoji: '🍽️', label: 'Fordøyelse' },
+    { emoji: '🦴', label: 'Osteoporose' },
+    { emoji: '💊', label: 'Medisiner' }
+  ];
+
+  // Allergy/intolerance options
+export const allergyOptions = [
+    { emoji: '🌾', label: 'Gluten' },
+    { emoji: '🥛', label: 'Laktose' },
+    { emoji: '🌰', label: 'Nøtter' },
+    { emoji: '🥜', label: 'Peanøtter' },
+    { emoji: '🦐', label: 'Skalldyr' },
+    { emoji: '🐟', label: 'Fisk' },
+    { emoji: '🥚', label: 'Egg' },
+    { emoji: '🌱', label: 'Soya' }
+  ];
+
+  // Food preference options
+export const foodPreferenceOptions = [
+    { emoji: '🌱', label: 'Vegetar' },
+    { emoji: '🥬', label: 'Vegansk' },
+    { emoji: '🕌', label: 'Halal' },
+    { emoji: '✡️', label: 'Kosher' },
+    { emoji: '🍞', label: 'Lavkarbo' },
+    { emoji: '🍬', label: 'Sukkerfri' },
+    { emoji: '🧈', label: 'Lite fett' },
+    { emoji: '🧂', label: 'Lite salt' },
+  ];
+
 export default onboardingSteps;

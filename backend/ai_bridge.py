@@ -60,21 +60,29 @@ class PreferencesResponse(BaseModel):
     success: bool
     message: str
 
-def build_system_prompt(settings: dict, onboarding_data: dict = None) -> str:
+def build_system_prompt(settings: dict, preferences: dict = None) -> str:
     """Build system prompt from user preferences"""
     prompt = "Du er NutriBot, en hjelpsom ernæringsassistent for eldre."
     
-    # Add onboarding data
-    if onboarding_data:
-        if onboarding_data.get('2') and len(onboarding_data['2']) > 0:
-            allergies = ', '.join(onboarding_data['2'])
-            prompt += f"\n\nBrukeren har følgende allergier eller kostpreferanser: {allergies}."
-            prompt += " Ta hensyn til dette i alle anbefalinger."
+    # Add preferences from the new structure
+    if preferences:
+        # Allergies are most important
+        if preferences.get('allergies') and len(preferences['allergies']) > 0:
+            allergies = ', '.join(preferences['allergies'])
+            prompt += f"\n\nVIKTIG: Brukeren har følgende allergier og intoleranser: {allergies}."
+            prompt += " Du MÅ advare brukeren hvis de spør om noe som inneholder disse ingrediensene. Aldri anbefal mat som inneholder disse."
         
-        if onboarding_data.get('3') and len(onboarding_data['3']) > 0:
-            conditions = ', '.join(onboarding_data['3'])
+        # Health conditions
+        if preferences.get('healthConditions') and len(preferences['healthConditions']) > 0:
+            conditions = ', '.join(preferences['healthConditions'])
             prompt += f"\n\nBrukeren har følgende helseutfordringer: {conditions}."
-            prompt += " Tilpass kostholdsrådene til disse tilstandene."
+            prompt += " Tilpass alle kostholdsråd til disse tilstandene."
+            
+        # Food preferences
+        if preferences.get('foodPreferences') and len(preferences['foodPreferences']) > 0:
+            food_prefs = ', '.join(preferences['foodPreferences'])
+            prompt += f"\n\nBrukeren har følgende kostpreferanser: {food_prefs}."
+            prompt += " Respekter disse preferansene i alle anbefalinger."
     
     # Add settings
     if settings.get('simplerLanguage'):
@@ -88,12 +96,12 @@ def build_system_prompt(settings: dict, onboarding_data: dict = None) -> str:
     
     # Language
     language_instructions = {
-        'no': "\n\nSvar på norsk.",
-        'en': "\n\nAnswer in English.",
-        'sv': "\n\nSvara på svenska.",
-        'da': "\n\nSvar på dansk."
+        'no': "\n\nSvar alltid på norsk.",
+        'en': "\n\nAlways answer in English.",
+        'sv': "\n\nSvara alltid på svenska.",
+        'da': "\n\nSvar alltid på dansk."
     }
-    prompt += language_instructions.get(settings.get('language', 'no'), "\n\nSvar på norsk.")
+    prompt += language_instructions.get(settings.get('language', 'no'), "\n\nSvar alltid på norsk.")
     
     return prompt
 
@@ -109,7 +117,7 @@ def getChat(request: ChatRequest):
         if request.settings or request.onboardingData:
             user_preferences_store[threadID] = {
                 'settings': request.settings or {},
-                'onboardingData': request.onboardingData or {}
+                'preferences': request.onboardingData or {}  # Changed key name
             }
     else:
         threadID = request.threadID
@@ -122,17 +130,18 @@ def getChat(request: ChatRequest):
             if request.settings:
                 user_preferences_store[threadID]['settings'] = request.settings
             if request.onboardingData:
-                user_preferences_store[threadID]['onboardingData'] = request.onboardingData
+                user_preferences_store[threadID]['preferences'] = request.onboardingData  # Changed key name
 
     # Get stored preferences or use request preferences
     stored_prefs = user_preferences_store.get(threadID, {})
     settings = request.settings or stored_prefs.get('settings', {})
-    onboarding_data = request.onboardingData or stored_prefs.get('onboardingData', {})
+    preferences = request.onboardingData or stored_prefs.get('preferences', {})  # Changed key name
     
     # Build system prompt from preferences
-    system_prompt = build_system_prompt(settings, onboarding_data)
+    system_prompt = build_system_prompt(settings, preferences)
     
     print(f"Thread ID: {threadID}")
+    print(f"Preferences: {preferences}")
     print(f"System Prompt: {system_prompt}")
 
     # WORKAROUND: Add system context as part of the user message

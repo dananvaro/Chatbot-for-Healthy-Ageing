@@ -15,6 +15,7 @@ import { MessageCircle, ChevronRight, Send, MessageCircleMore } from 'lucide-rea
 import Logo from './Logo';
 import SettingsSidebar from './SettingsSidebar';
 import AccessibilitySidebar from './AccessibilitySidebar';
+import PreferencesSidebar from './PreferencesSidebar';
 import messageIcon from '../assets/message-icon-2.png';
 import messageIconBlack from '../assets/message-icon-2-black.png';
 import appleIcon from '../assets/apple-icon.png';
@@ -39,7 +40,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
   const [inputValue, setInputValue] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
-  const [activeView, setActiveView] = useState('chat'); // 'chat', 'settings', or 'accessibility'
+  const [activeView, setActiveView] = useState('chat'); // 'chat', 'preferences', 'settings', or 'accessibility'
   const [textSize, setTextSize] = useState(3);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,13 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     shortAnswers: false,
     showSources: false,
     language: 'no'
+  });
+
+  // User preferences state - Now matches OnboardingCard output
+  const [userCustomPreferences, setUserCustomPreferences] = useState({
+    healthConditions: onboardingData?.healthConditions || userPreferences?.healthConditions || [],
+    allergies: onboardingData?.allergies || userPreferences?.allergies || [],
+    foodPreferences: onboardingData?.foodPreferences || userPreferences?.foodPreferences || []
   });
 
   // Mock previous conversations for the sidebar
@@ -85,20 +93,26 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Build system prompt based on settings and onboarding data
+  // Build system prompt based on settings and preferences
   const buildSystemPrompt = () => {
     let prompt = "Du er NutriBot, en hjelpsom ernæringsassistent for eldre.";
     
-    if (onboardingData) {
-      if (onboardingData[2] && onboardingData[2].length > 0) {
-        prompt += `\n\nBrukeren har følgende allergier eller kostpreferanser: ${onboardingData[2].join(', ')}.`;
-        prompt += " Ta hensyn til dette i alle anbefalinger.";
-      }
-      
-      if (onboardingData[3] && onboardingData[3].length > 0) {
-        prompt += `\n\nBrukeren har følgende helseutfordringer: ${onboardingData[3].join(', ')}.`;
-        prompt += " Tilpass kostholdsrådene til disse tilstandene.";
-      }
+    // Add allergies/intolerances first (most important)
+    if (userCustomPreferences.allergies && userCustomPreferences.allergies.length > 0) {
+      prompt += `\n\nVIKTIG: Brukeren har følgende allergier og intoleranser: ${userCustomPreferences.allergies.join(', ')}.`;
+      prompt += " Du MÅ advare brukeren hvis de spør om noe som inneholder disse ingrediensene. Aldri anbefal mat som inneholder disse.";
+    }
+    
+    // Add health conditions
+    if (userCustomPreferences.healthConditions && userCustomPreferences.healthConditions.length > 0) {
+      prompt += `\n\nBrukeren har følgende helseutfordringer: ${userCustomPreferences.healthConditions.join(', ')}.`;
+      prompt += " Tilpass alle kostholdsråd til disse tilstandene.";
+    }
+
+    // Add food preferences
+    if (userCustomPreferences.foodPreferences && userCustomPreferences.foodPreferences.length > 0) {
+      prompt += `\n\nBrukeren har følgende kostpreferanser: ${userCustomPreferences.foodPreferences.join(', ')}.`;
+      prompt += " Respekter disse preferansene i alle anbefalinger.";
     }
     
     if (botSettings.simplerLanguage) {
@@ -110,17 +124,17 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     }
     
     if (botSettings.showSources) {
-      prompt += "\n\nInkluder alltid kilder til informasjonen.";
+      prompt += "\n\nInkluder alltid kilder til informasjonen du deler.";
     }
     
     const languageInstructions = {
-      no: "\n\nSvar på norsk.",
-      en: "\n\nAnswer in English.",
-      sv: "\n\nSvara på svenska.",
-      da: "\n\nSvar på dansk."
+      no: "\n\nSvar alltid på norsk.",
+      en: "\n\nAlways answer in English.",
+      sv: "\n\nSvara alltid på svenska.",
+      da: "\n\nSvar alltid på dansk."
     };
     
-    prompt += languageInstructions[botSettings.language];
+    prompt += languageInstructions[botSettings.language] || languageInstructions.no;
     
     return prompt;
   };
@@ -164,7 +178,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
           threadID,
           systemPrompt,
           botSettings,
-          onboardingData
+          userCustomPreferences
         );
 
         botResponse = response.response;
@@ -213,11 +227,12 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
     return sizes[textSize - 1];
   };
 
+  // Sync preferences to backend when they change
   useEffect(() => {
     if (threadID && backendAvailable) {
       const syncPreferences = async () => {
         try {
-          await updatePreferences(threadID, botSettings, onboardingData);
+          await updatePreferences(threadID, botSettings, userCustomPreferences);
           console.log('Preferences synced to backend');
         } catch (error) {
           console.error('Failed to sync preferences:', error);
@@ -226,7 +241,24 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
 
       syncPreferences();
     }
-  }, [botSettings, threadID, backendAvailable, onboardingData]);
+  }, [botSettings, userCustomPreferences, threadID, backendAvailable]);
+
+  // Watch for changes to userCustomPreferences and reset thread if they change
+  useEffect(() => {
+    // Only reset if we have a threadID (not on first load)
+    if (threadID) {
+      console.log('Preferences changed, resetting thread for fresh context');
+      setThreadID(null);
+      
+      // Optionally add a system message to inform user
+      const systemMessage = {
+        id: messages.length + 1,
+        type: 'bot',
+        text: 'Preferansene dine er oppdatert! Jeg vil nå gi deg råd basert på de nye innstillingene dine. 🎯'
+      };
+      setMessages(prev => [...prev, systemMessage]);
+    }
+  }, [userCustomPreferences]);
 
   return (
     <Box width="100vw" height="100vh" bg="gray.100" display="flex" justifyContent="center" p={12} gap={12}>
@@ -355,7 +387,7 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
             fontSize="md"
             h="56px"
             borderRadius={0}
-            onClick={() => { setActiveView('accessibility'); setShowAccessibility(true); }}
+            onClick={() => setActiveView('accessibility')}
           >
             <ChakraImage 
               src={activeView === 'accessibility' ? accessibilityIconDarkBg : accessibilityIcon2} 
@@ -502,7 +534,15 @@ const ChatScreen = ({ userPreferences, onboardingData }) => {
         </Box>
       )}
 
-      {(activeView === 'settings' || activeView === 'preferences') && (
+      {activeView === 'preferences' && (
+        <PreferencesSidebar 
+          preferences={userCustomPreferences}
+          onPreferencesChange={setUserCustomPreferences}
+          onNavigateToChat={() => setActiveView('chat')}
+        />
+      )}
+
+      {activeView === 'settings' && (
         <SettingsSidebar 
           settings={botSettings}
           onSettingsChange={setBotSettings}

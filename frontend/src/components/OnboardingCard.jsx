@@ -31,19 +31,24 @@ const OnboardingCard = ({ onComplete }) => {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Combine all selections into the format expected by backend
+      // Send data in a clear structure that matches what ChatScreen expects
       const combinedData = {
-        2: [...(selectedOptions[2] || []), ...(otherText[2] ? [otherText[2]] : [])], // Allergies
-        3: [
-          ...(selectedOptions[3] || []), // Food preferences
-          ...(otherText[3] ? [otherText[3]] : []),
-          ...(selectedOptions[4] || []), // Health conditions
-          ...(otherText[4] ? [otherText[4]] : [])
+        allergies: [
+          ...(selectedOptions[2] || []), 
+          ...(otherText[2] ? [otherText[2].trim()] : [])
+        ],
+        foodPreferences: [
+          ...(selectedOptions[3] || []), 
+          ...(otherText[3] ? [otherText[3].trim()] : [])
+        ],
+        healthConditions: [
+          ...(selectedOptions[4] || []), 
+          ...(otherText[4] ? [otherText[4].trim()] : [])
         ]
       };
       
-      onComplete?.(combinedData);
       console.log('Onboarding complete with data:', combinedData);
+      onComplete?.(combinedData);
     }
   };
 
@@ -58,14 +63,18 @@ const OnboardingCard = ({ onComplete }) => {
   };
 
   const handleExitConfirm = () => {
-    // Exit with whatever data has been collected so far
     const combinedData = {
-      2: [...(selectedOptions[2] || []), ...(otherText[2] ? [otherText[2]] : [])], // Allergies
-      3: [
-        ...(selectedOptions[3] || []), // Food preferences
-        ...(otherText[3] ? [otherText[3]] : []),
-        ...(selectedOptions[4] || []), // Health conditions
-        ...(otherText[4] ? [otherText[4]] : [])
+      allergies: [
+        ...(selectedOptions[2] || []), 
+        ...(otherText[2] ? [otherText[2].trim()] : [])
+      ],
+      foodPreferences: [
+        ...(selectedOptions[3] || []), 
+        ...(otherText[3] ? [otherText[3].trim()] : [])
+      ],
+      healthConditions: [
+        ...(selectedOptions[4] || []), 
+        ...(otherText[4] ? [otherText[4].trim()] : [])
       ]
     };
     
@@ -158,11 +167,19 @@ const OnboardingCard = ({ onComplete }) => {
                   <Button
                     key={option.label}
                     onClick={() => toggleOption(option.label)}
-                    bg={isSelected(option.label) ? 'green.800' : 'gray.200'}
+                    bg={
+                      isSelected(option.label) 
+                        ? (step.id === 2 ? '#832527F1' : 'green.800')
+                        : 'gray.200'
+                    }
                     border="1px solid"
                     borderColor="gray.800"
                     borderRadius={24}
-                    _hover={{ bg: isSelected(option.label) ? 'green.800' : 'gray.400' }}
+                    _hover={{ 
+                      bg: isSelected(option.label) 
+                        ? (step.id === 2 ? 'red.700' : 'green.700')
+                        : 'gray.400' 
+                    }}
                     h="120px"
                     w="full"
                     display="flex"
