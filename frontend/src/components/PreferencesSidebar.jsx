@@ -15,7 +15,6 @@ import { allergyOptions } from "../data/onboardingSteps";
 import { foodPreferenceOptions } from "../data/onboardingSteps";
 
 const PreferencesSidebar = ({ preferences, onPreferencesChange, onNavigateToChat }) => {
-
   const [selectedOptions, setSelectedOptions] = useState({
     healthConditions: preferences?.healthConditions || [],
     allergies: preferences?.allergies || [],
@@ -26,6 +25,12 @@ const PreferencesSidebar = ({ preferences, onPreferencesChange, onNavigateToChat
     healthConditions: '',
     allergies: '',
     foodPreferences: ''
+  });
+
+  const [inputSaved, setInputSaved] = useState({
+    healthConditions: false,
+    allergies: false,
+    foodPreferences: false
   });
 
   const toggleOption = (category, label) => {
@@ -46,6 +51,29 @@ const PreferencesSidebar = ({ preferences, onPreferencesChange, onNavigateToChat
       ...prev,
       [category]: text
     }));
+    // Clear saved status when user types
+    setInputSaved(prev => ({
+      ...prev,
+      [category]: false
+    }));
+  };
+
+  const handleInputKeyPress = (category, e) => {
+    if (e.key === 'Enter' && otherText[category]?.trim()) {
+      // Mark as saved
+      setInputSaved(prev => ({
+        ...prev,
+        [category]: true
+      }));
+      
+      // Clear the saved message after 2 seconds
+      setTimeout(() => {
+        setInputSaved(prev => ({
+          ...prev,
+          [category]: false
+        }));
+      }, 2000);
+    }
   };
 
   const handleSave = () => {
@@ -158,13 +186,33 @@ const PreferencesSidebar = ({ preferences, onPreferencesChange, onNavigateToChat
                 placeholder="Skriv inn andre helsetilstander her ..."
                 value={otherText.healthConditions}
                 onChange={(e) => handleOtherTextChange('healthConditions', e.target.value)}
+                onKeyPress={(e) => handleInputKeyPress('healthConditions', e)}
                 bg="white"
-                borderColor='gray.800'
+                borderColor={inputSaved.healthConditions ? 'green.500' : 'gray.800'}
+                borderWidth={inputSaved.healthConditions ? 2 : 1}
                 borderRadius="xl"
                 py={6}
                 fontSize="md"
-                _focus={{ borderColor: 'cyan.400', boxShadow: '0 0 0 2px var(--chakra-colors-cyan-400)' }}
+                _focus={{ 
+                  borderColor: inputSaved.healthConditions ? 'green.500' : 'green.800', 
+                  boxShadow: inputSaved.healthConditions 
+                    ? '0 0 0 1px var(--chakra-colors-green-500)' 
+                    : '0 0 0 1px var(--chakra-colors-green-800)',
+                  outline: 'none'
+                }}
+                _hover={{ borderColor: inputSaved.healthConditions ? 'green.500' : 'gray.600' }}
+                transition="all 0.2s"
               />
+              {inputSaved.healthConditions && (
+                <HStack mt={2} spacing={2}>
+                  <Box color="green.600">
+                    <Text as="span" fontSize="lg">✓</Text>
+                  </Box>
+                  <Text fontSize="sm" color="green.600" fontWeight="semibold">
+                    Lagret! Husk å trykke "Lagre endringer" for å bekrefte.
+                  </Text>
+                </HStack>
+              )}
             </Box>
           </Box>
 
@@ -215,14 +263,33 @@ const PreferencesSidebar = ({ preferences, onPreferencesChange, onNavigateToChat
                 placeholder="Skriv inn andre matvarer her ..."
                 value={otherText.allergies}
                 onChange={(e) => handleOtherTextChange('allergies', e.target.value)}
+                onKeyPress={(e) => handleInputKeyPress('allergies', e)}
                 bg="white"
-                borderColor="gray.800"
-                borderWidth={1}
+                borderColor={inputSaved.allergies ? 'green.500' : 'gray.800'}
+                borderWidth={inputSaved.allergies ? 2 : 1}
                 borderRadius="xl"
                 py={6}
                 fontSize="md"
-                _focus={{ borderColor: 'cyan.400', boxShadow: '0 0 0 2px var(--chakra-colors-cyan-400)' }}
+                _focus={{ 
+                  borderColor: inputSaved.allergies ? 'green.500' : 'green.800', 
+                  boxShadow: inputSaved.allergies 
+                    ? '0 0 0 1px var(--chakra-colors-green-500)' 
+                    : '0 0 0 1px var(--chakra-colors-green-800)',
+                  outline: 'none'
+                }}
+                _hover={{ borderColor: inputSaved.allergies ? 'green.500' : 'gray.600' }}
+                transition="all 0.2s"
               />
+              {inputSaved.allergies && (
+                <HStack mt={2} spacing={2}>
+                  <Box color="green.600">
+                    <Text as="span" fontSize="lg">✓</Text>
+                  </Box>
+                  <Text fontSize="sm" color="green.600" fontWeight="semibold">
+                    Lagret! Husk å trykke "Lagre endringer" for å bekrefte.
+                  </Text>
+                </HStack>
+              )}
             </Box>
           </Box>
 
@@ -273,14 +340,33 @@ const PreferencesSidebar = ({ preferences, onPreferencesChange, onNavigateToChat
                 placeholder="Skriv inn andre preferanser her ..."
                 value={otherText.foodPreferences}
                 onChange={(e) => handleOtherTextChange('foodPreferences', e.target.value)}
+                onKeyPress={(e) => handleInputKeyPress('foodPreferences', e)}
                 bg="white"
-                borderColor="gray.800"
-                borderWidth={1}
+                borderColor={inputSaved.foodPreferences ? 'green.500' : 'gray.800'}
+                borderWidth={inputSaved.foodPreferences ? 2 : 1}
                 borderRadius="xl"
                 py={6}
                 fontSize="md"
-                _focus={{ borderColor: 'cyan.400', boxShadow: '0 0 0 2px var(--chakra-colors-cyan-400)' }}
+                _focus={{ 
+                  borderColor: inputSaved.foodPreferences ? 'green.500' : 'green.800', 
+                  boxShadow: inputSaved.foodPreferences 
+                    ? '0 0 0 1px var(--chakra-colors-green-500)' 
+                    : '0 0 0 1px var(--chakra-colors-green-800)',
+                  outline: 'none'
+                }}
+                _hover={{ borderColor: inputSaved.foodPreferences ? 'green.500' : 'gray.600' }}
+                transition="all 0.2s"
               />
+              {inputSaved.foodPreferences && (
+                <HStack mt={2} spacing={2}>
+                  <Box color="green.600">
+                    <Text as="span" fontSize="lg">✓</Text>
+                  </Box>
+                  <Text fontSize="sm" color="green.600" fontWeight="semibold">
+                    Lagret! Husk å trykke "Lagre endringer" for å bekrefte.
+                  </Text>
+                </HStack>
+              )}
             </Box>
           </Box>
         </VStack>

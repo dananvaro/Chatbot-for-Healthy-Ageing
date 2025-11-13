@@ -24,6 +24,7 @@ const OnboardingCard = ({ onComplete }) => {
   const [selectedOptions, setSelectedOptions] = useState({});
   const [otherText, setOtherText] = useState({});
   const [showExitWarning, setShowExitWarning] = useState(false);
+  const [inputSaved, setInputSaved] = useState({}); // Track if input is saved
 
   const step = onboardingSteps[currentStep];
 
@@ -104,6 +105,29 @@ const OnboardingCard = ({ onComplete }) => {
       ...prev,
       [step.id]: text
     }));
+    // Clear saved status when user types
+    setInputSaved(prev => ({
+      ...prev,
+      [step.id]: false
+    }));
+  };
+
+  const handleInputKeyPress = (e) => {
+    if (e.key === 'Enter' && otherText[step.id]?.trim()) {
+      // Mark as saved
+      setInputSaved(prev => ({
+        ...prev,
+        [step.id]: true
+      }));
+      
+      // Optional: Clear the saved message after 2 seconds
+      setTimeout(() => {
+        setInputSaved(prev => ({
+          ...prev,
+          [step.id]: false
+        }));
+      }, 2000);
+    }
   };
 
   return (
@@ -129,28 +153,30 @@ const OnboardingCard = ({ onComplete }) => {
           position="absolute"
           top={4}
           right={4}
-          size="sm"
-          bg="gray.200"
-          color="black"
-          _hover={{ bg: 'gray.300' }}
-          borderRadius="md"
-          fontSize="large"
-          fontWeight="semibold"
+          bg="transparent"
+          _hover={{ bg: 'gray.100' }}
           onClick={handleCloseClick}
+          p={2}
+          minW="auto"
+          h="auto"
         >
-          Lukk vindu ✕
+          <X size={20} />
         </Button>
 
-        {/* Scrollable content area */}
-        <Box flex="1" overflow="auto" mb={16}>
-          {/* Content based on step type */}
+        {/* Content */}
+        <Box flex="1" display="flex" flexDirection="column" justifyContent="center">
           {step.type === 'welcome' && (
-            <VStack spacing={6} align="stretch" h="full" justify="center">
-              <Box textAlign="center" ml={36} mr={36}>
-                <Logo size="lg" />
-                <Heading size="5xl" mb={4} fontWeight={"bold"}>{step.title}</Heading>
-                <Text fontSize="lg" color="black" fontWeight={"bold"}>{step.subtitle}</Text>
-                <Text fontSize="lg" color="black" mt={4} fontWeight={"medium"}>{step.description}</Text>
+            <VStack spacing={8} align="center" textAlign="center" h="full" justify="center">
+              <Box ml={24} mr={24}>
+                <Heading size="5xl" color="gray.800" fontWeight="bold" mb={2}>
+                  {step.title}
+                </Heading>
+                <Text fontSize="2xl" color="gray.800" fontWeight="semibold" mb={4}>
+                  {step.subtitle}
+                </Text>
+                <Text fontSize="xl" color="gray.600" fontWeight="medium">
+                  {step.description}
+                </Text>
               </Box>
             </VStack>
           )}
@@ -163,7 +189,7 @@ const OnboardingCard = ({ onComplete }) => {
               </Box>
 
               <Grid templateColumns="repeat(4, 1fr)" gap={2} mt={4}>
-                {step.options.map((option) => (
+                {step.options?.map((option) => (
                   <Button
                     key={option.label}
                     onClick={() => toggleOption(option.label)}
@@ -204,15 +230,32 @@ const OnboardingCard = ({ onComplete }) => {
                     placeholder={`Skriv inn andre ${step.sectionLabel.toLowerCase()} her ...`}
                     value={otherText[step.id] || ''}
                     onChange={(e) => handleOtherTextChange(e.target.value)}
+                    onKeyPress={handleInputKeyPress}
                     bg="white"
-                    borderColor="gray.800"
-                    borderWidth={1}
+                    borderColor={inputSaved[step.id] ? 'green.500' : 'gray.800'}
+                    borderWidth={inputSaved[step.id] ? 2 : 1}
                     borderRadius={12}
                     pt={6}
-                    pb={6}                  
+                    pb={6}
                     fontSize="lg"
-                    _focus={{ borderColor: 'green.500', boxShadow: '0 0 0 1px var(--chakra-colors-green-500)' }}
+                    _focus={{ 
+                      borderColor: inputSaved[step.id] ? 'green.500' : 'cyan.400', 
+                      boxShadow: inputSaved[step.id] 
+                        ? '0 0 0 1px var(--chakra-colors-green-500)' 
+                        : '0 0 0 1px var(--chakra-colors-cyan-400)' 
+                    }}
+                    transition="all 0.2s"
                   />
+                  {inputSaved[step.id] && (
+                    <HStack mt={2} spacing={2}>
+                      <Box color="green.600">
+                        <Text as="span" fontSize="lg">✓</Text>
+                      </Box>
+                      <Text fontSize="sm" color="green.600" fontWeight="semibold">
+                        Lagret!
+                      </Text>
+                    </HStack>
+                  )}
                 </Box>
               )}
             </VStack>
