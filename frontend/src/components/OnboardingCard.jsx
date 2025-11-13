@@ -153,14 +153,15 @@ const OnboardingCard = ({ onComplete }) => {
           position="absolute"
           top={4}
           right={4}
-          bg="transparent"
-          _hover={{ bg: 'gray.100' }}
+          bg="gray.100"
+          _hover={{ bg: 'gray.200' }}
           onClick={handleCloseClick}
           p={2}
           minW="auto"
           h="auto"
         >
-          <X size={20} />
+          <Text color="black" fontSize="lg" fontWeight="semibold">Lukk vindu</Text>
+          <X size={20} color="black"/>
         </Button>
 
         {/* Content */}
