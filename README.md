@@ -21,7 +21,7 @@ The purpose of this project is to develop a conversational AI/chatbot for older 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/Chatbot-for-Healthy-Ageing.git
+   git clone https://github.com/dananvaro/Chatbot-for-Healthy-Ageing.git
    cd Chatbot-for-Healthy-Ageing
    ```
 
