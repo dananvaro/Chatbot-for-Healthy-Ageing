@@ -1,16 +1,48 @@
-# React + Vite
+## Prerequisites 📋
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Before you begin, ensure you have the following installed:
 
-Currently, two official plugins are available:
+- **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
+- **npm** - Package manager (comes with Node.js)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation & Setup 🚀
 
-## React Compiler
+### 1. Clone the Repository
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+git clone https://github.com/dananvaro/Chatbot-for-Healthy-Ageing.git
+cd Chatbot-for-Healthy-Ageing/frontend
+```
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Install Dependencies
+
+Using npm:
+```bash
+npm install
+```
+
+
+### 3. Environment Configuration
+
+Create a `.env` file in the `frontend` directory:
+
+```env
+# Backend API URL
+VITE_API_URL=http://localhost:8000
+
+
+### 4. Start the Development Server
+
+```bash
+npm run dev
+```
+
+The application will start at `http://localhost:5173` (default Vite port).
+
+
+### 5. Verify Backend Connection
+
+Make sure the backend server is running at `http://localhost:8000`. The frontend will automatically check backend health on startup.
+
+If the backend is not available, the app will use mock responses for testing purposes.
